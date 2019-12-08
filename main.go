@@ -11,12 +11,14 @@ import (
 )
 
 func main() {
+	// read the json file
 	data, err := ioutil.ReadFile("images.json")
 	if err != nil {
 		fmt.Errorf("can't read json data %s", err)
 		return
 	}
 
+	// unmarshal json file
 	var result []string
 	err = json.Unmarshal(data, &result)
 	if err != nil {
@@ -32,6 +34,7 @@ func main() {
 	}
 }
 
+// DownloadImages download the image from url and save it to data folder
 func DownloadImages(url string, filepath string) error {
 	CreateDirIfNotExist("data")
 	// Create the file
@@ -60,6 +63,7 @@ func DownloadImages(url string, filepath string) error {
 	return nil
 }
 
+// CreateDirIfNotExist create directory if the directory doesn't exist
 func CreateDirIfNotExist(dir string) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
@@ -69,6 +73,7 @@ func CreateDirIfNotExist(dir string) {
 	}
 }
 
+// CheckError check the error
 func checkError(err error) {
 	if err != nil {
 		panic(err)
