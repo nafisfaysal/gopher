@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -26,12 +27,58 @@ func main() {
 		return
 	}
 
+	jobs := make(chan string, len(result))
+	rst := make(chan string, len(result))
+
+	for w := 1; w <= 3; w++ {
+		go worker(w, jobs, rst, strconv.Itoa(w)+"golang.jpg")
+	}
+
 	for i, url := range result {
 		i++
 		fmt.Printf("#%d - Downloading %s\n", i, url)
-		DownloadImages(url, strconv.Itoa(i)+"golang.jpg")
+		jobs <- url
 		fmt.Printf("#%d - Completed %s\n", i, url)
 	}
+
+	close(jobs)
+
+	for a := 1; a <= len(result); a++ {
+		<-rst
+	}
+}
+
+func worker(id int, jobs <-chan string, results chan<- string, filepath string) error {
+	fmt.Printf("#%d is the id of the thread number\n", id)
+	for j := range jobs {
+		time.Sleep(time.Second)
+		CreateDirIfNotExist("data")
+		// Create the file
+		out, err := os.Create("data/" + filepath)
+		checkError(err)
+		defer out.Close()
+
+		// Get the data
+		resp, err := http.Get(j)
+		if err != nil {
+			fmt.Printf("got bad request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		// Check server response
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("bad status: %s", resp.Status)
+		}
+
+		// Write the body to file
+		_, err = io.Copy(out, resp.Body)
+		if err != nil {
+			return err
+		}
+		results <- j
+	}
+
+	return nil
 }
 
 // DownloadImages download the image from url and save it to data folder
