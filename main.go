@@ -43,7 +43,7 @@ func main() {
 
 	close(jobs)
 
-	for a := 1; a <= len(result); a++ {
+	for a := 1; a <= 5; a++ {
 		<-rst
 	}
 }
@@ -63,12 +63,14 @@ func DownloadImages(id int, jobs <-chan string, results chan<- string, filepath 
 		resp, err := http.Get(j)
 		if err != nil {
 			fmt.Printf("got bad request: %s", err)
+			return err
 		}
 		defer resp.Body.Close()
 
 		// Check server response
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("bad status: %s", resp.Status)
+			fmt.Errorf("bad status: %s", resp.Status)
+			return err
 		}
 
 		// Write the body to file
